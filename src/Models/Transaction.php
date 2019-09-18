@@ -41,6 +41,7 @@ class Transaction extends Model
         'amount',
         'confirmed',
         'meta',
+        'blockchain_tx',
     ];
 
     /**
@@ -78,6 +79,21 @@ class Transaction extends Model
     public function wallet(): BelongsTo
     {
         return $this->belongsTo(config('wallet.wallet.model'));
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        // Create uid when creating list.
+        static::creating(function ($item) {
+            // Create new uid
+            $uid = uniqid();
+            while (Transaction::where('uuid', '=', $uid)->count() > 0) {
+                $uid = uniqid();
+            }
+            $item->uuid = $uid;
+        });
     }
 
 }

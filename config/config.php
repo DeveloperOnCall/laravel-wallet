@@ -45,6 +45,28 @@ return [
     ],
 
     /**
+     * API URLs for listing blockchain transactions
+     */
+    'blockchain_api' => [
+        'BTC' => [
+            'list' => 'https://api.blockcypher.com/v1/btc/main/addrs/ADDRESS_REPLACE/full?limit=10',
+            'detail' => 'https://api.blockcypher.com/v1/btc/main/txs/TX_REPLACE'
+        ],
+        'BCH' => [
+            'list' => 'https://blockdozer.com/api/addr/ADDRESS_REPLACE',
+            'detail' => 'https://blockdozer.com/api/tx/TX_REPLACE'
+        ],
+        'ETH' => [
+            'list' => 'http://api.etherscan.io/api?module=account&action=txlist&address=ADDRESS_REPLACE',
+            'detail' => 'http://api.ethplorer.io/getTxInfo/ADDRESS_REPLACE?apiKey=freekey'
+        ],
+        'XRP' => [
+            'list' => 'https://data.ripple.com/v2/accounts/ADDRESS_REPLACE/balance_changes?descending=true&limit=5',
+            'detail' => 'https://data.ripple.com/v2/transactions/LAST_HASH_REPLACE?binary=false'
+        ],
+    ],
+
+    /**
      * Services are the main core of the library and sometimes they need to be improved.
      * This configuration will help you to quickly customize the library.
      */
