@@ -37,7 +37,12 @@ return [
      * @example
      *  'my-usd' => 'USD'
      */
-    'currencies' => [],
+    'currencies' => [
+        'bitcoin' => 'BTC',
+        'bitcoin-cash' => 'BCH',
+        'etherium' => 'ETH',
+        'ripple' => 'XRP'
+    ],
 
     /**
      * Services are the main core of the library and sometimes they need to be improved.
@@ -78,4 +83,7 @@ return [
             'slug' => 'default',
         ],
     ],
+
+    'multitenant' => true,
+    'cryptos' => true,
 ];
