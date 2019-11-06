@@ -44,6 +44,7 @@ class WalletFloatTest extends TestCase
     public function testInvalidDeposit(): void
     {
         $this->expectException(AmountInvalid::class);
+        $this->expectExceptionMessageStrict(trans('wallet::errors.price_positive'));
         $user = factory(User::class)->create();
         $user->depositFloat(-1);
     }
@@ -54,6 +55,7 @@ class WalletFloatTest extends TestCase
     public function testWithdraw(): void
     {
         $this->expectException(BalanceIsEmpty::class);
+        $this->expectExceptionMessageStrict(trans('wallet::errors.wallet_empty'));
 
         $user = factory(User::class)->create();
         $this->assertEquals($user->balance, 0);
@@ -79,6 +81,7 @@ class WalletFloatTest extends TestCase
     public function testInvalidWithdraw(): void
     {
         $this->expectException(BalanceIsEmpty::class);
+        $this->expectExceptionMessageStrict(trans('wallet::errors.wallet_empty'));
         $user = factory(User::class)->create();
         $user->withdrawFloat(-1);
     }
@@ -156,6 +159,7 @@ class WalletFloatTest extends TestCase
     public function testBalanceIsEmpty(): void
     {
         $this->expectException(BalanceIsEmpty::class);
+        $this->expectExceptionMessageStrict(trans('wallet::errors.wallet_empty'));
 
         /**
          * @var User $user
@@ -230,15 +234,15 @@ class WalletFloatTest extends TestCase
         $this->assertEquals($user->balance, 1000000);
         $this->assertEquals($user->balanceFloat, 10000.00);
 
-        $transaction = $user->withdrawFloat(0.2+0.1);
+        $transaction = $user->withdrawFloat(0.2 + 0.1);
         $this->assertEquals($transaction->amount, -30);
         $this->assertEquals($transaction->type, Transaction::TYPE_WITHDRAW);
 
-        $transaction = $user->withdrawFloat(0.2+0.105);
+        $transaction = $user->withdrawFloat(0.2 + 0.105);
         $this->assertEquals($transaction->amount, -31);
         $this->assertEquals($transaction->type, Transaction::TYPE_WITHDRAW);
 
-        $transaction = $user->withdrawFloat(0.2+0.104);
+        $transaction = $user->withdrawFloat(0.2 + 0.104);
         $this->assertEquals($transaction->amount, -30);
         $this->assertEquals($transaction->type, Transaction::TYPE_WITHDRAW);
     }

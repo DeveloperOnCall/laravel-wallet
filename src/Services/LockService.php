@@ -34,7 +34,7 @@ class LockService
      */
     public function lock($self, string $name, \Closure $closure)
     {
-        return $this->lockProvider($self, $name, (int) config('wallet.lock.seconds'))
+        return $this->lockProvider($self, $name, (int)config('wallet.lock.seconds', 1))
             ->get($this->bindTo($self, $closure));
     }
 
@@ -54,11 +54,13 @@ class LockService
 
     /**
      * @return Store|null
+     * @codeCoverageIgnore
      */
     protected function cache(): ?Store
     {
         try {
-            return Cache::getStore();
+            return Cache::store(config('wallet.lock.cache'))
+                ->getStore();
         } catch (\Throwable $throwable) {
             return null;
         }
@@ -88,7 +90,7 @@ class LockService
         }
         // @codeCoverageIgnoreEnd
 
-        return new EmptyLock();
+        return app(EmptyLock::class);
     }
 
 }

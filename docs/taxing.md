@@ -37,7 +37,7 @@ class Item extends Model implements Product, Taxable
         return true; 
     }
 
-    public function getAmountProduct(): int
+    public function getAmountProduct(Customer $customer): int
     {
         return 100;
     }
@@ -46,8 +46,7 @@ class Item extends Model implements Product, Taxable
     {
         return [
             'title' => $this->title, 
-            'description' => 'Purchase of Product #' . $this->id, 
-            'price' => $this->getAmountProduct(),
+            'description' => 'Purchase of Product #' . $this->id,
         ];
     }
     
@@ -76,7 +75,7 @@ Find the goods and check the cost.
 
 ```php
 $item = Item::first();
-$item->getAmountProduct(); // int(100)
+$item->getAmountProduct($user); // int(100)
 ```
 
 The user can buy a product, buy...
@@ -109,7 +108,7 @@ class Item extends Model implements Product, MinimalTaxable
         return true; 
     }
 
-    public function getAmountProduct(): int
+    public function getAmountProduct(Customer $customer): int
     {
         return 100;
     }
@@ -118,8 +117,7 @@ class Item extends Model implements Product, MinimalTaxable
     {
         return [
             'title' => $this->title, 
-            'description' => 'Purchase of Product #' . $this->id, 
-            'price' => $this->getAmountProduct(),
+            'description' => 'Purchase of Product #' . $this->id,
         ];
     }
     
@@ -153,13 +151,13 @@ Find the goods and check the cost.
 
 ```php
 $item = Item::first();
-$item->getAmountProduct(); // int(100)
+$item->getAmountProduct($user); // int(100)
 ```
 
 The user can buy a product, buy...
 
 ```php
-$user->pay($item); // failed, 100 (product) + 5 (minimal fee) = 105
+$user->pay($item); // success, 100 (product) + 5 (minimal fee) = 105
 $user->balance; // int(0)
 ```
 
@@ -176,7 +174,7 @@ Find the goods and check the cost.
 
 ```php
 $item = Item::first();
-$item->getAmountProduct(); // int(100)
+$item->getAmountProduct($user); // int(100)
 ```
 
 The user can buy a product, buy...

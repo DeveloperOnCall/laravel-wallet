@@ -1,5 +1,9 @@
 <?php
 
+use Bavix\Wallet\Objects\Bring;
+use Bavix\Wallet\Objects\Cart;
+use Bavix\Wallet\Objects\EmptyLock;
+use Bavix\Wallet\Objects\Operation;
 use Bavix\Wallet\Services\ExchangeService;
 use Bavix\Wallet\Services\CommonService;
 use Bavix\Wallet\Services\ProxyService;
@@ -9,6 +13,7 @@ use Bavix\Wallet\Models\Transaction;
 use Bavix\Wallet\Models\Transfer;
 use Bavix\Wallet\Models\Wallet;
 use Bavix\Wallet\Simple\Rate;
+use Bavix\Wallet\Simple\Store;
 
 return [
     /**
@@ -17,12 +22,21 @@ return [
      */
     'package' => [
         'rateable' => Rate::class,
+        'storable' => Store::class,
     ],
 
     /**
      * Lock settings for highload projects
+     *
+     * If you want to replace the default cache with another,
+     * then write the name of the driver cache in the key `wallet.lock.cache`.
+     * @see https://laravel.com/docs/6.x/cache#driver-prerequisites
+     *
+     * @example
+     *  'cache' => 'redis'
      */
     'lock' => [
+        'cache' => null,
         'enabled' => false,
         'seconds' => 1,
     ],
@@ -76,6 +90,13 @@ return [
         'proxy' => ProxyService::class,
         'wallet' => WalletService::class,
         'lock' => LockService::class,
+    ],
+
+    'objects' => [
+        'bring' => Bring::class,
+        'cart' => Cart::class,
+        'emptyLock' => EmptyLock::class,
+        'operation' => Operation::class,
     ],
 
     /**

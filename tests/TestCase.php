@@ -3,6 +3,7 @@
 namespace Bavix\Wallet\Test;
 
 use Bavix\Wallet\Services\ProxyService;
+use Bavix\Wallet\Simple\Store;
 use Bavix\Wallet\Test\Common\Models\Transaction;
 use Bavix\Wallet\Test\Common\Models\Transfer;
 use Bavix\Wallet\Test\Common\Models\Wallet;
@@ -26,15 +27,15 @@ class TestCase extends OrchestraTestCase
         $this->withFactories(__DIR__ . '/factories');
         $this->loadMigrationsFrom([
             '--database' => 'testbench',
-            '--path' => __DIR__ . '/migrations'
-        ]);
-        $this->loadMigrationsFrom([
-            '--database' => 'testbench',
             '--path' => dirname(__DIR__) . '/database/migrations_v1'
         ]);
         $this->loadMigrationsFrom([
             '--database' => 'testbench',
             '--path' => dirname(__DIR__) . '/database/migrations_v2'
+        ]);
+        $this->loadMigrationsFrom([
+            '--database' => 'testbench',
+            '--path' => __DIR__ . '/migrations'
         ]);
     }
 
@@ -46,6 +47,7 @@ class TestCase extends OrchestraTestCase
     {
         // Bind eloquent models to IoC container
         $app['config']->set('wallet.package.rateable', Rate::class);
+        $app['config']->set('wallet.package.storable', Store::class);
         return [WalletServiceProvider::class];
     }
 
@@ -79,6 +81,7 @@ class TestCase extends OrchestraTestCase
 
         if (extension_loaded('memcached')) {
             $app['config']->set('cache.default', 'memcached');
+            $app['config']->set('wallet.lock.cache', 'memcached');
         }
 
         $app['config']->set('cache.stores.memcached', [
@@ -99,6 +102,14 @@ class TestCase extends OrchestraTestCase
             'database' => ':memory:',
             'prefix' => '',
         ]);
+    }
+
+    /**
+     * @param string $message
+     */
+    public function expectExceptionMessageStrict(string $message): void
+    {
+        $this->expectExceptionMessageRegExp("~^{$message}$~");
     }
 
 }

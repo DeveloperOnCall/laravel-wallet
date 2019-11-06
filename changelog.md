@@ -6,6 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2019-10-04
+### Added
+- Added interface `Storeable` for creating your own wallet balance repositories. #103
+- Added support for [pcov](https://pecl.php.net/package/pcov), now coated unit tests work in a few seconds, not minutes.
+- Allow developers to inherit classes: `Operation`, `Bring`, etc.. #106
+- Added personal product discounts (see `Discount` interface).
+- Added a separate service for working with the connection. It’s not possible to configure flexibly at the moment, wait for new releases.
+
+### Changed
+- The minimum version of php 7.2.
+- Old versions of the `laravel/cashier` package have been removed, now support begins with the seventh version.
+- New argument `Customer $customer` added to `getAmountProduct` method. #117 @jlstandout
+- Now for `LockService` you can choose your own (separate) cache.
+- Personal discount information has been added to the `transfers` table. Data is not used in the library, but will be needed for the future.
+- New argument `Customer $customer` added to `getTotal` method. #117
+
+### Fixed
+- Giving a gift (Santa) no longer goes into minus due to taxes. #111
+- Upon receipt, the configuration is marked with default values. #117
+- Fixed a bug due to which the wallet could go negative when transferring (exchanging) money, tax. #117
+- A more correct balance change, a bug with a successful update in the database and an unsuccessful update of the balance (race condition) field was fixed.
+- Fixed a bug with a purchase without funds and tax. When trying to pay, an exception was thrown.
+- Reworked and fixed unit tests, fixed bugs.
+
+### Deprecated
+- `ProxyService` is deprecated and is no longer used.
+- `WalletService::getBalance` method is deprecated, use `Storeable::getBalance`.
+
+## [3.3.0] - 2019-09-10
+### Added
+- Added the ability to easily overload the main classes #106
+
 ## [3.2.1] - 2019-09-10
 ### Fixed
 - Fixed calculation of commission for exchange #101 @haojingliu 
@@ -399,7 +431,9 @@ The operation is now executed in the transaction and updates the new `refund` fi
 - Exceptions: AmountInvalid, BalanceIsEmpty.
 - Models: Transfer, Transaction.
 
-[Unreleased]: https://github.com/bavix/laravel-wallet/compare/3.2.1...HEAD
+[Unreleased]: https://github.com/bavix/laravel-wallet/compare/4.0.0...HEAD
+[4.0.0]: https://github.com/bavix/laravel-wallet/compare/3.3.0...4.0.0
+[3.3.0]: https://github.com/bavix/laravel-wallet/compare/3.2.1...3.3.0
 [3.2.1]: https://github.com/bavix/laravel-wallet/compare/3.2.0...3.2.1
 [3.2.0]: https://github.com/bavix/laravel-wallet/compare/3.1.6...3.2.0
 [3.1.6]: https://github.com/bavix/laravel-wallet/compare/3.1.5...3.1.6

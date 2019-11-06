@@ -3,8 +3,15 @@
 namespace Bavix\Wallet\Services;
 
 use ArrayAccess;
+use Bavix\Wallet\Interfaces\Storable;
 use function array_key_exists;
 
+/**
+ * Class ProxyService
+ * @package Bavix\Wallet\Services
+ * @codeCoverageIgnore
+ * @deprecated
+ */
 class ProxyService implements ArrayAccess
 {
 
@@ -89,6 +96,7 @@ class ProxyService implements ArrayAccess
      */
     public function fresh(): void
     {
+        app()->instance(Storable::class, null);
         $this->data = [];
     }
 

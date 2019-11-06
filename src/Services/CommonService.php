@@ -4,6 +4,7 @@ namespace Bavix\Wallet\Services;
 
 use Bavix\Wallet\Exceptions\BalanceIsEmpty;
 use Bavix\Wallet\Exceptions\InsufficientFunds;
+use Bavix\Wallet\Interfaces\Storable;
 use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Models\Transaction;
 use Bavix\Wallet\Models\Transfer;
@@ -11,9 +12,9 @@ use Bavix\Wallet\Models\Wallet as WalletModel;
 use Bavix\Wallet\Objects\Bring;
 use Bavix\Wallet\Objects\Operation;
 use Bavix\Wallet\Traits\HasWallet;
-use Illuminate\Support\Facades\DB;
 use function app;
 use function compact;
+use function max;
 
 class CommonService
 {
@@ -29,7 +30,10 @@ class CommonService
     public function transfer(Wallet $from, Wallet $to, int $amount, ?array $meta = null, string $status = Transfer::STATUS_TRANSFER): Transfer
     {
         return app(LockService::class)->lock($this, __FUNCTION__, function () use ($from, $to, $amount, $meta, $status) {
-            $this->verifyWithdraw($from, $amount);
+            $discount = app(WalletService::class)->discount($from, $to);
+            $newAmount = max(0, $amount - $discount);
+            $fee = app(WalletService::class)->fee($to, $newAmount);
+            $this->verifyWithdraw($from, $newAmount + $fee);
             return $this->forceTransfer($from, $to, $amount, $meta, $status);
         });
     }
@@ -45,18 +49,20 @@ class CommonService
     public function forceTransfer(Wallet $from, Wallet $to, int $amount, ?array $meta = null, string $status = Transfer::STATUS_TRANSFER): Transfer
     {
         return app(LockService::class)->lock($this, __FUNCTION__, function () use ($from, $to, $amount, $meta, $status) {
+            $from = app(WalletService::class)->getWallet($from);
+            $discount = app(WalletService::class)->discount($from, $to);
+            $amount = max(0, $amount - $discount);
+
             $fee = app(WalletService::class)->fee($to, $amount);
             $withdraw = $this->forceWithdraw($from, $amount + $fee, $meta);
             $deposit = $this->deposit($to, $amount, $meta);
 
-            $from = app(WalletService::class)
-                ->getWallet($from);
-
             $transfers = $this->multiBrings([
-                (new Bring())
+                app(Bring::class)
                     ->setStatus($status)
                     ->setDeposit($deposit)
                     ->setWithdraw($withdraw)
+                    ->setDiscount($discount)
                     ->setFrom($from)
                     ->setTo($to)
             ]);
@@ -84,7 +90,7 @@ class CommonService
             $wallet = $walletService->getWallet($wallet);
 
             $transactions = $this->multiOperation($wallet, [
-                (new Operation())
+                app(Operation::class)
                     ->setType(Transaction::TYPE_WITHDRAW)
                     ->setConfirmed($confirmed)
                     ->setAmount(-$amount)
@@ -114,7 +120,7 @@ class CommonService
             $wallet = $walletService->getWallet($wallet);
 
             $transactions = $this->multiOperation($wallet, [
-                (new Operation())
+                app(Operation::class)
                     ->setType(Transaction::TYPE_DEPOSIT)
                     ->setConfirmed($confirmed)
                     ->setAmount($amount)
@@ -185,7 +191,7 @@ class CommonService
     {
         return app(LockService::class)->lock($this, __FUNCTION__, function () use ($brings) {
             $self = $this;
-            return DB::transaction(static function () use ($self, $brings) {
+            return app(DbService::class)->transaction(static function () use ($self, $brings) {
                 return $self->multiBrings($brings);
             });
         });
@@ -219,17 +225,24 @@ class CommonService
     {
         return app(LockService::class)->lock($this, __FUNCTION__, static function () use ($wallet, $amount) {
             /**
-             * @var ProxyService $proxy
              * @var WalletModel $wallet
              */
-            $proxy = app(ProxyService::class);
-            $balance = $wallet->balance + $amount;
-            if ($proxy->has($wallet->getKey())) {
-                $balance = $proxy->get($wallet->getKey()) + $amount;
+            $balance = app(Storable::class)
+                ->incBalance($wallet, $amount);
+
+            try {
+                $result = $wallet->update(compact('balance'));
+            } catch (\Throwable $throwable) {
+                app(Storable::class)
+                    ->setBalance($wallet, $wallet->getAvailableBalance());
+
+                throw $throwable;
             }
 
-            $result = $wallet->update(compact('balance'));
-            $proxy->set($wallet->getKey(), $balance);
+            if (!$result) {
+                app(Storable::class)
+                    ->setBalance($wallet, $wallet->getAvailableBalance());
+            }
 
             return $result;
         });

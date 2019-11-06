@@ -36,7 +36,7 @@ class Item extends Model implements Product
         return true; 
     }
 
-    public function getAmountProduct(): int
+    public function getAmountProduct(Customer $customer): int
     {
         return 100;
     }
@@ -45,8 +45,7 @@ class Item extends Model implements Product
     {
         return [
             'title' => $this->title, 
-            'description' => 'Purchase of Product #' . $this->id, 
-            'price' => $this->getAmountProduct(),
+            'description' => 'Purchase of Product #' . $this->id,
         ];
     }
     
@@ -75,11 +74,13 @@ Find the product.
 
 ```php
 $item = Item::first();
-$item->getAmountProduct(); // int(100)
+$item->getAmountProduct($first); // int(100)
 $item->balance; // int(0)
 ```
 
 The first user buys the product and gives it.
+
+> If the product uses the `Taxable` interface, then Santa will pay tax
 
 ```php
 $first->gift($last, $item);

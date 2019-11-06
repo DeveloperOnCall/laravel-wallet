@@ -7,8 +7,8 @@ use Bavix\Wallet\Interfaces\Product;
 use Bavix\Wallet\Models\Transfer;
 use Bavix\Wallet\Objects\Cart;
 use Bavix\Wallet\Services\CommonService;
+use Bavix\Wallet\Services\DbService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 use function array_unique;
 use function count;
@@ -32,7 +32,7 @@ trait CartPay
             ->verifyWithdraw($this, 0, true);
 
         $self = $this;
-        return DB::transaction(static function () use ($self, $cart) {
+        return app(DbService::class)->transaction(static function () use ($self, $cart) {
             $results = [];
             foreach ($cart->getItems() as $product) {
                 $results[] = app(CommonService::class)->forceTransfer(
@@ -75,14 +75,14 @@ trait CartPay
         }
 
         $self = $this;
-        return DB::transaction(static function () use ($self, $cart, $force) {
+        return app(DbService::class)->transaction(static function () use ($self, $cart, $force) {
             $results = [];
             foreach ($cart->getItems() as $product) {
                 if ($force) {
                     $results[] = app(CommonService::class)->forceTransfer(
                         $self,
                         $product,
-                        $product->getAmountProduct(),
+                        $product->getAmountProduct($self),
                         $product->getMetaProduct(),
                         Transfer::STATUS_PAID
                     );
@@ -93,7 +93,7 @@ trait CartPay
                 $results[] = app(CommonService::class)->transfer(
                     $self,
                     $product,
-                    $product->getAmountProduct(),
+                    $product->getAmountProduct($self),
                     $product->getMetaProduct(),
                     Transfer::STATUS_PAID
                 );
@@ -138,7 +138,7 @@ trait CartPay
     public function refundCart(Cart $cart, bool $force = null, bool $gifts = null): bool
     {
         $self = $this;
-        return DB::transaction(static function () use ($self, $cart, $force, $gifts) {
+        return app(DbService::class)->transaction(static function () use ($self, $cart, $force, $gifts) {
             $results = [];
             $transfers = $cart->alreadyBuy($self, $gifts);
             if (count($transfers) !== count($cart)) {
@@ -229,7 +229,7 @@ trait CartPay
      */
     public function paid(Product $product, bool $gifts = null): ?Transfer
     {
-        return current(Cart::make()->addItem($product)->alreadyBuy($this, $gifts)) ?: null;
+        return current(app(Cart::class)->addItem($product)->alreadyBuy($this, $gifts)) ?: null;
     }
 
 }

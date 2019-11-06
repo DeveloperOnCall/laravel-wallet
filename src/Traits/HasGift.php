@@ -7,9 +7,9 @@ use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Models\Transfer;
 use Bavix\Wallet\Objects\Bring;
 use Bavix\Wallet\Services\CommonService;
+use Bavix\Wallet\Services\DbService;
 use Bavix\Wallet\Services\LockService;
 use Bavix\Wallet\Services\WalletService;
-use Illuminate\Support\Facades\DB;
 use Throwable;
 use function app;
 
@@ -63,8 +63,9 @@ trait HasGift
              * I think it is wrong to make the "assemble" method public.
              * That's why I address him like this!
              */
-            return DB::transaction(static function () use ($santa, $to, $product, $force) {
-                $amount = $product->getAmountProduct();
+            return app(DbService::class)->transaction(static function () use ($santa, $to, $product, $force) {
+                $discount = app(WalletService::class)->discount($santa, $product);
+                $amount = $product->getAmountProduct($santa) - $discount;
                 $meta = $product->getMetaProduct();
                 $fee = app(WalletService::class)
                     ->fee($product, $amount);
@@ -75,19 +76,19 @@ trait HasGift
                  * Santa pays taxes
                  */
                 if (!$force) {
-                    $commonService->verifyWithdraw($santa, $amount);
+                    $commonService->verifyWithdraw($santa, $amount + $fee);
                 }
 
                 $withdraw = $commonService->forceWithdraw($santa, $amount + $fee, $meta);
-
                 $deposit = $commonService->deposit($product, $amount, $meta);
 
                 $from = app(WalletService::class)
                     ->getWallet($to);
 
                 $transfers = $commonService->assemble([
-                    (new Bring())
+                    app(Bring::class)
                         ->setStatus(Transfer::STATUS_GIFT)
+                        ->setDiscount($discount)
                         ->setDeposit($deposit)
                         ->setWithdraw($withdraw)
                         ->setFrom($from)

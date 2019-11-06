@@ -4,17 +4,19 @@
   "keywords": [
     "laravel",
     "laravel5",
+    "laravel6",
     "credits",
     "bavix",
     "currency",
     "laravel5-package",
+    "laravel6-package",
     "laravel-wallet",
     "virtual",
     "wallet",
     "payments"
   ],
   "minimum-stability": "stable",
-  "homepage": "https://github.com/bavix/laravel-wallet",
+  "homepage": "https://bavix.github.io/laravel-wallet/",
   "license": "MIT",
   "authors": [
     {
@@ -23,21 +25,23 @@
     }
   ],
   "require": {
-    "php": "^7.1|^8.0",
+    "php": "^7.2|^8.0",
+    "ext-pdo": "*",
     "illuminate/database": "^5.5|^6.0",
     "nesbot/carbon": "^1.20|^2.0",
     "doctrine/dbal": "^2.8",
     "ramsey/uuid": "^3.0"
   },
   "require-dev": {
-    "infection/infection": "^0.13",
-    "orchestra/testbench": "^3.7|^4.0",
+    "infection/infection": "^0.14",
+    "orchestra/testbench": "^4.2",
     "phpstan/phpstan": "^0.11",
-    "phpunit/phpunit": "^7.5|^8.2",
-    "laravel/cashier": "*"
+    "phpunit/phpunit": "^8.4",
+    "laravel/cashier": "^7.0|^8.0|^9.0|^10.0"
   },
   "suggest": {
-    "bavix/laravel-wallet-swap": "Addition to the laravel-wallet library for quick setting of exchange rates"
+    "bavix/laravel-wallet-swap": "Addition to the laravel-wallet library for quick setting of exchange rates",
+    "bavix/laravel-wallet-vacuum": "Addition to the laravel-wallet library for quick fix race condition"
   },
   "autoload": {
     "psr-4": {

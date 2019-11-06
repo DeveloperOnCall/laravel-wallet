@@ -3,7 +3,10 @@
 namespace Bavix\Wallet\Services;
 
 use Bavix\Wallet\Exceptions\AmountInvalid;
+use Bavix\Wallet\Interfaces\Customer;
+use Bavix\Wallet\Interfaces\Discount;
 use Bavix\Wallet\Interfaces\MinimalTaxable;
+use Bavix\Wallet\Interfaces\Storable;
 use Bavix\Wallet\Interfaces\Taxable;
 use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Models\Wallet as WalletModel;
@@ -12,6 +15,21 @@ use function app;
 
 class WalletService
 {
+
+    /**
+     * @param Wallet $customer
+     * @param Wallet $product
+     * @return int
+     */
+    public function discount(Wallet $customer, Wallet $product): int
+    {
+        if ($customer instanceof Customer && $product instanceof Discount) {
+            return $product->getPersonalDiscount($customer);
+        }
+
+        // without discount
+        return 0;
+    }
 
     /**
      * @param Wallet $object
@@ -34,7 +52,7 @@ class WalletService
     {
         $fee = 0;
         if ($wallet instanceof Taxable) {
-            $fee = (int) ($amount * $wallet->getFeePercent() / 100);
+            $fee = (int)($amount * $wallet->getFeePercent() / 100);
         }
 
         /**
@@ -45,7 +63,7 @@ class WalletService
         if ($wallet instanceof MinimalTaxable) {
             $minimal = $wallet->getMinimalFee();
             if ($fee < $minimal) {
-                $fee = $wallet->getMinimalFee();
+                $fee = $minimal;
             }
         }
 
@@ -94,16 +112,12 @@ class WalletService
     /**
      * @param Wallet $object
      * @return int
+     * @deprecated use Storable::getBalance
      */
     public function getBalance(Wallet $object): int
     {
-        $wallet = $this->getWallet($object);
-        $proxy = app(ProxyService::class);
-        if (!$proxy->has($wallet->getKey())) {
-            $proxy->set($wallet->getKey(), (int) $wallet->getOriginal('balance', 0));
-        }
-
-        return $proxy[$wallet->getKey()];
+        return app(Storable::class)
+            ->getBalance($object);
     }
 
     /**
@@ -112,15 +126,13 @@ class WalletService
      */
     public function refresh(WalletModel $wallet): bool
     {
-        return app(LockService::class)->lock($this, __FUNCTION__, function () use ($wallet) {
-            $this->getBalance($wallet);
+        return app(LockService::class)->lock($this, __FUNCTION__, static function () use ($wallet) {
+            app(Storable::class)->getBalance($wallet);
             $balance = $wallet->getAvailableBalance();
             $wallet->balance = $balance;
 
-            $proxy = app(ProxyService::class);
-            $proxy->set($wallet->getKey(), $balance);
-
-            return $wallet->save();
+            return app(Storable::class)->setBalance($wallet, $balance) &&
+                $wallet->save();
         });
     }
 
